@@ -52,7 +52,7 @@ class Renren(object):
                     self.i_get_img()
                     img_content = input('打开文件夹查看并输入验证码：')
                     self.params['icode'] = img_content
-                    return 0
+                    continue
                 os.system('cls')
                 print(config.FAILCODE[symbol_code_num])
             else:
@@ -265,6 +265,7 @@ class Renren(object):
             f.write(header)
             f.close
         return 0
+###第一层文件夹下的网址/bak和第二层文件夹下的网址/bak/blog中的html的超链接稍微有点不同，所以新开一个method
     def create_sub_folder_basic_html(self, file_name):
         header = """<html>
     <head>
@@ -297,7 +298,7 @@ class Renren(object):
             f.write(blog_list_title)
         return 0
     
-###循环打开所有月份的人人网页
+###循环打开所有月份的人人网页的说说并下载保存
     def all_year_and_month(self):
         self.create_basic_html('shuo.html')
         self.create_weibo_page_head()
@@ -318,10 +319,11 @@ class Renren(object):
                 time.sleep(random.randint(1, 4))
         self.full_fill_html('shuo.html')
         return 0
+###替换掉备份中的图片链接，并且下载图片
     def repl_img_url(self, strings, blog=0):
         #print(strings)
         strings = re.sub('\?ver=\d', '', strings)
-        img_url = re.findall('src=["\'](http:[\w/\.\-/]{10,200}\.[gbjp][gifbmpnje]{1,2}[fgp])', strings)
+        img_url = re.findall('src=["\'](http:[\w/\.\-/]{9,200}\.[gbjp][gifbmpnje]{1,2}[fgp])', strings)
         #print(img_url)
         #print(len(img_url))
         for url in img_url:
@@ -335,6 +337,7 @@ class Renren(object):
             strings = re.sub('src=\'http://[\s\S]+?/', 'src=\'./pic/', strings)
         strings = re.sub('thumbnail=["\'][\s\S]+?["\']', '', strings)
         return strings
+###根据给定网址，下载图片并且保存到相关文件夹
     def download_img(self, img_url):
         if img_url.count('/')<4:
             return 0
@@ -356,6 +359,7 @@ class Renren(object):
             kk = f.read
             f.write(pic_data.content)
         return 0
+###把评论组合成特定格式的html源码
     def join_commet(self, commet):
         commet_in_htmls = """        <div class="commet">
         """+commet[2]+': '+commet[0]+' @ '+commet[1]+"""
@@ -363,6 +367,7 @@ class Renren(object):
 """
         commet_in_html = self.repl_img_url(commet_in_htmls, 1)
         return commet_in_html
+###根据给定的文章或者相片id获取相关的评论，如果是文章blog默认为0或指定为0，相片指定为非0非none非空，一般指定1
     def get_commet(self, page_id, blog=0):
         param = {"limit":"20", "desc":"true", "offset":"0", "replaceUBBLarge":"true", "type":"blog", "entryId":page_id, "entryOwnerId":self.user_id, "requestToken":self.requestToken, "_rtk":self.rtk}
         commet_url = 'http://comment.renren.com/comment/xoa2'
@@ -379,6 +384,7 @@ class Renren(object):
             for commet in commets_list:
                 commets = commets+self.join_commet(commet)
         return commets
+###根据博客的id获取博客内容，因为博客id是json格式并经过变换的，博客id小于99999999的是因为经过压缩，省略了末尾的0
     def get_blog_content(self, blog_id):
         while int(blog_id)<99999999:
             blog_id = int(blog_id)*10
@@ -395,6 +401,7 @@ class Renren(object):
         else:
             blog_content = self.repl_img_url(blog_content[0], 1)
             return blog_content
+###根据给定的博客id和博客描述的list来获取博客内容并组合成特定的html源码格式
     def save_single_blog_page(self, blog_id, blog_tuple):
         if not os.path.exists('./blog'):
             os.makedirs('./blog')
@@ -416,6 +423,9 @@ class Renren(object):
             </html>"""
         self.save_html(text1, file_name)
         return 0
+###根据博客网址保存单独的一篇博客，因为因为博客id比较特殊的原因极有可能一两篇博客不能保存，
+###只好补充一个保存单篇的method，获取tuple过程中直接就截取了博客内容，评论数目暂时没法获取，
+###已知bug，博客显示页面上没有评论数的源码，需要另写method来获取评论数
     def save_a_single_blog(self, a_blog_url):
         if not os.path.exists('./blog'):
             os.makedirs('./blog')
@@ -449,6 +459,7 @@ class Renren(object):
         print(' ')
         print(' ')
         return 0
+###根据博客id获取博客标题、发布时间、内容、阅读数
     def get_blog_tuple(self, blog_id):
         while int(blog_id)<99999999:
             blog_id = int(blog_id)*10
@@ -478,6 +489,7 @@ class Renren(object):
         if len(blog_title):
             blog_tuple[2] = blog_read_num[0]
         return blog_tuple
+###把文章summary组合成特定的html源码格式
     def join_blog_list(self, blog_tuple):
         if blog_tuple:
             blog_id = re.sub('\.', '', blog_tuple[4])
@@ -492,6 +504,7 @@ class Renren(object):
             <br><br>"""
             return text1
         return None
+###根据博客总篇数获取博客列表的总页数
     def get_blog_list_page_num(self):
         blog_start_url = 'http://blog.renren.com/blog/'+str(self.user_id)+'/myBlogs'
         blog_start_page = self.open_url(blog_start_url)
@@ -504,6 +517,7 @@ class Renren(object):
             #print(all_blog_page_num)
             return all_blog_page_num
         return 0
+###为博客列表创建h3标题
     def create_blog_list_page_head(self):
         self.create_basic_html('blog.html')
         blog_list_title = """    <h3>博客文章列表</h3>
@@ -512,6 +526,7 @@ class Renren(object):
         with open('blog.html', 'a+', encoding='utf-8') as f:
             f.write(blog_list_title)
         return 0
+###获取summary页面中谋篇博客的信息并组合成list
     def get_blog_content_list(self, blog_list_url, blog_param):
         blog_list = self.open_url(blog_list_url, blog_param)
         blog_list_content = blog_list.content.decode()
@@ -520,6 +535,7 @@ class Renren(object):
         blog_content_list = re.findall(patten, blog_list_content)
         #print(blog_content_list)
         return blog_content_list
+###把summary页面的博客的summary组合成特定的html源码格式
     def save_blog_in_a_page(self, blog_content_list):
         blog_in_a_page = ""
         for blog in blog_content_list:
@@ -529,12 +545,14 @@ class Renren(object):
         with open('blog.html', 'a+', encoding='utf-8') as f:
             f.write(blog_in_a_page)
         return 0
+###为网页补充完整源代码
     def full_fill_html(self, file_name):
         blog_list_end_html = """    </body>
         </html>"""
         with open(file_name, 'a+', encoding='utf-8') as f:
             f.write(blog_list_end_html)
         return 0
+###调用相关功能，保存所有的博客文章，略微控制速度（随机暂停4~8秒），因为我发现请求同一个人速度太快了就被block了
     def all_blogs(self):
         self.create_blog_list_page_head()
         all_blog_page_num = self.get_blog_list_page_num()
@@ -556,12 +574,14 @@ class Renren(object):
             time.sleep(random.randint(4, 8))
         self.full_fill_html('blog.html')
         return 0
+###为相册列表添加h3标题
     def create_album_list_page_head(self):
         self.create_basic_html('album.html')
         album_list_title = """    <h3>相册列表</h3>"""
         with open('album.html', 'a+', encoding='utf-8') as f:
             f.write(album_list_title)
         return 0
+###创建相册头部html并且添加标题
     def create_album_page_head(self, album_id, album_name):
         if not os.path.exists('./album'):
             os.makedirs('./album')
@@ -570,18 +590,21 @@ class Renren(object):
         with open('./album/album-'+album_id+'.html', 'a+', encoding='utf-8') as f:
             f.write(album_list_title)
         return 0
+###把html源码的相册下载替换掉相关的链接并保存到文件
     def save_photo_in_html(self, album_id, photo_in_html):
         photo_in_html = self.repl_img_url(photo_in_html, 1)
         with open('./album/album-'+album_id+'.html', 'a+', encoding='utf-8') as f:
             f.write(photo_in_html)
         return 0
-    
+###获取相册列表和相关信息（相册名称、相册id、相册图片数量）
     def get_album_content_list(self, album_list_url):
         album_content_list_sourse = self.open_url(album_list_url)
         album_content_list_decode = album_content_list_sourse.content.decode()
         album_content_list = re.findall('albumName":"([\s\S]+?)","albumId":"(\d+)"[\s\S]+?photoCount":(\d+),', album_content_list_decode)
         #print(album_content_list)
         return album_content_list
+###获取相关照片的描述
+###已知bug，描述开头用数字或者字母或者特殊符号，没法处理混码，备份后显示的是Unicode编码
     def get_photo_discribe(self, photo_id):
         photo_url = 'http://photo.renren.com/photo/'+self.user_id+'/photo-'+photo_id+'/v7'
         photo_sourse = self.open_url(photo_url)
@@ -596,6 +619,7 @@ class Renren(object):
                 
             return photo_discribe
         return '本图没有标题'
+###保存相册并组合成html源码格式
     def save_album(self, album_id, album_name):
         album_url = 'http://photo.renren.com/photo/'+self.user_id+'/album-'+album_id+'/v7'
         #print(album_url)
@@ -627,6 +651,7 @@ class Renren(object):
             self.full_fill_html('./album/album-'+album_id+'.html')
             time.sleep(random.randint(0, 3))
         return 0
+###保存相册的列表页面
     def save_album_list(self, album_content_list):
         album_list_in_html = ""
         if album_content_list:
@@ -644,6 +669,7 @@ class Renren(object):
         with open('album.html', 'a+', encoding='utf-8') as f:
             f.write(album_list_in_html)
         return 0
+###保存某用户的所有相册
     def all_album(self):
         self.create_album_list_page_head()
         album_list_url = 'http://photo.renren.com/photo/'+str(self.user_id)+'/albumlist/v7'
@@ -653,6 +679,7 @@ class Renren(object):
         self.save_album_list(album_content_list)
         self.full_fill_html('album.html')
         return 0
+###请用户输入账号、密码
     def get_user_account_and_pw(self):
         print("人人网、校内备份脚本write by rublog")
         account_tips = "请输入人人网账号并按回车："
@@ -662,6 +689,7 @@ class Renren(object):
         self.params['email'] = account
         self.params['password'] = pw
         return 0
+###创建用户的主页，很简单，只有相片名字和备份时间
     def make_index(self):
         self.create_basic_html('index.html')
         index_content = """
@@ -689,6 +717,7 @@ class Renren(object):
         with open('index.html', 'a+', encoding='utf-8') as f:
             f.write(index_content)
         return 0
+###main程序
 if __name__=='__main__':
     tips = """人人网、校内备份脚本 write by rublog
     
@@ -708,6 +737,7 @@ if __name__=='__main__':
     #print(ren.user_name)
     #ren.make_index()
     #lol = input('stop here!')
+###如果没登录就请用户输入账号、密码直到登陆成功
     while not ren.is_login:
         ren.get_user_account_and_pw()
         u_id = ren.login()
@@ -735,6 +765,7 @@ if __name__=='__main__':
     #上面两行测试保存单片日志
     #co = ren.all_album()
     #print(co)
+###功能选择程序段
     end = 1
     while end:
         kk = input(choice_tips)
@@ -812,6 +843,7 @@ if __name__=='__main__':
             a_month_page = ren.save_a_single_blog(a_blog_url)
         elif kk == 5:
             print('正在退出，请稍候.......')
+            time.sleep(4)
             end = 0
         else:
             os.system('cls')
