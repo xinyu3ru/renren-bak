@@ -8,7 +8,8 @@ import re
 import time
 import random
 import os
-import math
+import shutil
+from tqdm import tqdm
 
 import config
 
@@ -30,6 +31,7 @@ class Renren(object):
         self.requestToken = '1000'
         self.user_name = 'No name!'
         self.tiny_photo_url = 'http://www.renren.com'
+        self.dir_name = 'temp_name'
 
     ####登陆模块使用post来发送账号密码
     def post_data(self, login_url, params):
@@ -135,7 +137,7 @@ class Renren(object):
         return 1000
 
     def get_user_name(self, shouye):
-        user_name = re.findall('name\s:\s"([\s\S]*?)"', shouye)
+        user_name = re.findall('avatar_title\sno_auth">([\s\S]*?)<span>', shouye)
         if user_name:
             self.user_name = user_name[0]
             return user_name[0]
@@ -188,14 +190,14 @@ class Renren(object):
 
     ###获取每条微博的内容
     def get_weibo_content(self, detail_page):
-        pre_content = re.findall('<div\sclass="content-main">[\S\s]+?</d', detail_page)
+        pre_content = re.findall('<div\sclass="content-main">[\S\s]+?</article>', detail_page)
         if len(pre_content) == 0:
             return []
-        content_pre = re.findall('>[\s\S]+?</|>[\s\S]+?</', pre_content[0])
-        content = content_pre[0].lstrip('>')
-        content = content.rstrip('</ d')
-        content = re.sub('<a[\S\s]+?>', '', content)
-        content = re.sub('http://52ust.com.cn|52ust.com.cn', '', content)
+        content = re.sub('</h4>', 'brbrbr', pre_content[0])
+        content = re.sub('</span>', 'brbrbr', content)
+        content = re.sub('<[\s\S]+?>', '', content)
+        content = re.sub('[\s]{3,}', '', content)
+        content = re.sub('brbrbr', '<br>', content)
         # print(content)
         # print(pre_content)
         return content
@@ -209,16 +211,16 @@ class Renren(object):
     ###获取每一条回复
     def get_replys(self, detail_page):
         pre_reply = re.findall(
-            '"\starget="_blank">[\s|\S]*?</a>:&nbsp;[\s|\S]*?</p>\s*<div\sclass="bottom-bar">\s*<span\sclass="time">\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}</span>',
+            'class="reply-content">[\s|\S]*?</a>:&nbsp;[\s|\S]*?</p>\s*<div\sclass="bottom-bar">\s*<span\sclass="time">\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}</span>',
             detail_page)
         # print(pre_reply)
         replys = []
         for reply in pre_reply:
-            pre_man = re.findall('>[\s|\S]*?</a', reply)
-            man = self.get_rid(pre_man[0], '<>/a')
+            pre_man = re.findall('_blank">([\s|\S]*?)</a', reply)
+            man = pre_man[0]
             # print(man)
-            pre_reply_content = re.findall('p;[\s|\S]*?</', reply)
-            reply_content = self.get_rid(pre_reply_content[0], 'p;</ \n')
+            pre_reply_content = re.findall('nbsp;([\s|\S]*?)</', reply)
+            reply_content = pre_reply_content[0]
             reply_content = re.sub('<a[\S\s]+?>', '', reply_content)
             reply_time = re.findall('\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}', reply)
             full_reply = '    ' + man + ': ' + reply_content + ' @' + reply_time[0]
@@ -324,6 +326,7 @@ class Renren(object):
 
     ###循环打开所有月份的人人网页的说说并下载保存
     def all_year_and_month(self):
+        print('正在保存人人网状态/说说/微博')
         self.create_basic_html('shuo.html')
         self.create_weibo_page_head()
         weibo_urls = 'http://www.renren.com/timelinefeedretrieve.do'
@@ -332,7 +335,7 @@ class Renren(object):
         # print(self.cookies)
         param['ownerid'] = self.user_id
         for year in range(2016, 2007, -1):
-            for month in range(12, 0, -1):
+            for month in tqdm(range(12, 0, -1)):
                 param['year'] = year
                 param['month'] = month
                 detailpage_in_monthly_page = self.open_url(weibo_urls, param)
@@ -412,6 +415,12 @@ class Renren(object):
         commets = ''
         if commets_list:
             for commet in commets_list:
+                commet = list(commet)
+                iii = len(commet)
+                for i in range(0, iii):
+                    if commet[i].startswith('\\u'):
+                # print(type(photo_discribe))
+                        commet[i] = commet[i].encode('latin-1').decode('unicode_escape')
                 commets = commets + self.join_commet(commet)
         return commets
 
@@ -595,6 +604,7 @@ class Renren(object):
 
     ###调用相关功能，保存所有的博客文章，略微控制速度（随机暂停4~8秒），因为我发现请求同一个人速度太快了就被block了
     def all_blogs(self):
+        print('正在保存人人网文章/日志/博客')
         self.create_blog_list_page_head()
         all_blog_page_num = self.get_blog_list_page_num()
         # print(all_blog_page_num)
@@ -602,7 +612,7 @@ class Renren(object):
         # print(blog_list_url)
         blog_param = {"categoryId": " ", "curpage": "0", "requestToken": self.requestToken, "_rtk": self.rtk}
         # print(blog_param)
-        for page_num in range(0, all_blog_page_num + 1):
+        for page_num in tqdm((0, all_blog_page_num + 1)):
             blog_param["curpage"] = page_num
             # print(blog_param)
             blog_content_list = self.get_blog_content_list(blog_list_url, blog_param)
@@ -706,13 +716,12 @@ class Renren(object):
     def save_album_list(self, album_content_list):
         album_list_in_html = ""
         if album_content_list:
-            for album_name in album_content_list:
+            for album_name in tqdm(album_content_list):
                 album_name = list(album_name)
                 if album_name[0].startswith('\\u'):
                     album_name[0] = album_name[0].encode('latin-1').decode('unicode_escape')
                 self.create_album_page_head(album_name[1], album_name[0])
                 self.save_album(album_name[1], album_name[0])
-                time
                 album_list_in_html = album_list_in_html + """        <div class="album_name">
         <p><a href="./album/album-""" + album_name[1] + """.html">""" + album_name[0] + '</a>     共' + album_name[
                     2] + '张 </p>' + """
@@ -724,6 +733,7 @@ class Renren(object):
 
     ###保存某用户的所有相册
     def all_album(self):
+        print('正在保存人人网相册')
         self.create_album_list_page_head()
         album_list_url = 'http://photo.renren.com/photo/' + str(self.user_id) + '/albumlist/v7'
         # print(album_list_url)
@@ -771,8 +781,30 @@ class Renren(object):
         index_content = self.repl_img_url(index_content)
         with open('index.html', 'a+', encoding='utf-8') as f:
             f.write(index_content)
+        self.dir_name = "人人网"+self.user_name+'资料备份'+time.strftime('%Y-%m-%d', self.localtime)
+        if not os.path.exists(self.dir_name):
+            os.makedirs(self.dir_name)
         return 0
-
+    def replace_guest_info(self, user_id):
+        user_page = 'http://www.renren.com/' + user_id + '/profile'
+        # print(user_page)
+        index = self.open_url(user_page)
+        # print(index.url)
+        # print(index.request.headers)
+        # print(index.headers)
+        self.get_user_tiny_photo_url(index.content.decode())
+        self.get_user_name(index.content.decode())
+        return 0
+    def pack_up(self):
+        file_list = ['index.html', 'album.html', 'blog.html', 'shuo.html', 'album', 'blog', 'pic']
+        for file in file_list:
+            try:
+                shutil.move(file, self.dir_name+'/'+file)
+            except:
+                continue
+            finally:
+                pass
+        return 0
 
 def main():
     tips = """人人网、校内备份脚本 write by rublog
@@ -796,12 +828,10 @@ def main():
     while not ren.is_login:
         ren.get_user_account_and_pw()
         u_id = ren.login()
-    ren.make_index()
     os.system('cls')
     choice_tips = """人人网、校内备份脚本 write by rublog
 
 本脚本部分控制网页请求速度但未使用多线程，
-人人网说说可能保存有点慢，像是假死，但是它一直在工作。
 
 (0)、备份人人网说说、博客、相册
 (1)、备份人人网说说
@@ -837,6 +867,7 @@ def main():
             print('*************************************************************')
             print(' ')
             print(' ')
+            ren.make_index()
             a_month_page = ren.all_year_and_month()
             hh = ren.all_blogs()
             co = ren.all_album()
@@ -853,6 +884,7 @@ def main():
             print('***********************************************************')
             print(' ')
             print(' ')
+            ren.make_index()
             a_month_page = ren.all_year_and_month()
             os.system('cls')
             print('*************************************************************')
@@ -867,6 +899,7 @@ def main():
             print('***********************************************************')
             print(' ')
             print(' ')
+            ren.make_index()
             hh = ren.all_blogs()
             os.system('cls')
             print('*************************************************************')
@@ -881,6 +914,7 @@ def main():
             print('***********************************************************')
             print(' ')
             print(' ')
+            ren.make_index()
             co = ren.all_album()
             os.system('cls')
             print('*************************************************************')
@@ -896,8 +930,11 @@ def main():
             print(' ')
             print(' ')
             a_blog_url = input('请输入博客网址:')
+            ren.make_index()
             a_month_page = ren.save_a_single_blog(a_blog_url)
         elif kk == 5:
+            print('正在打包备份的文件，请稍候......')
+            ren.pack_up()
             print('正在退出，请稍候.......')
             time.sleep(2)
             end = 0
@@ -913,10 +950,15 @@ def main():
             print(' ')
             print(' ')
             self_user_id_bak = ren.user_id
-            ren.user_id = input('请输入Ta的user_id： ')
+            self_user_name_bak = ren.user_name
+            self_tiny_photo_url_bak = ren.tiny_photo_url
+            ren.user_id = input('请输入Ta的user_id:')
+            ren.replace_guest_info(ren.user_id)
+            ren.make_index()
             a_month_page = ren.all_year_and_month()
             hh = ren.all_blogs()
             co = ren.all_album()
+            ren.pack_up()
             os.system('cls')
             print('************************************************************')
             print('   **********************已保存***************************   ')
@@ -926,6 +968,8 @@ def main():
             print(' ')
             print(' ')
             ren.user_id = self_user_id_bak
+            ren.user_name = self_user_name_bak
+            ren.tiny_photo_url = self_tiny_photo_url_bak
         else:
             os.system('cls')
             print('************************************************')
