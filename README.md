@@ -14,9 +14,9 @@
 * 依赖：pypi tqdm   实现快速的进度条显示
 
 
-![开始界面](./pic/021316_1230_201602136.png "开始界面")
+![开始界面](https://github.com/xinyu3ru/renren-bak/blob/master/pic/021316_1319_201602136.png "开始界面")
 
-![保存界面](./pic/021316_1230_201602137.png "保存界面")
+![保存界面](https://github.com/xinyu3ru/renren-bak/blob/master/pic/021316_1230_201602137.png "保存界面")
 
 [可以到我的博客上看更多一点图片](http://www.rxx0.com/motion/ren-ren-wang-bei-fen-2016-02-13-python-3-5.html)<br>
 
