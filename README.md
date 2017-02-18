@@ -14,11 +14,11 @@
 * 依赖：pypi tqdm   实现快速的进度条显示
 
 
-![开始界面](http://www.5169.info/wp-content/uploads/2016/02/021316_1230_201602136.png "开始界面")
+![开始界面](./pic/021316_1230_201602136.png "开始界面")
 
-![保存界面](http://www.5169.info/wp-content/uploads/2016/02/021316_1230_201602137.png "保存界面")
+![保存界面](./pic/021316_1230_201602137.png "保存界面")
 
-[可以到我的博客上看更多一点图片](http://www.5169.info/motion/ren-ren-wang-bei-fen-2016-02-13-python-3-5.html)<br>
+[可以到我的博客上看更多一点图片](http://www.rxx0.com/motion/ren-ren-wang-bei-fen-2016-02-13-python-3-5.html)<br>
 
 2016.03.08 增加保存单个朋友资料功能，并把备份的文件放置于“人人网xxx资料备份xxxx-xx-xx”文件夹下面
            更新因为突然想保存某个朋友的相片
