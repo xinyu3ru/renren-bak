@@ -1,6 +1,6 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
-#警告只可修改下面第十行《EMAIL = r'您的邮箱'  PASSWORD = r'您的密码'》中的汉字部分
+#警告只可修改下面第10行11行《EMAIL = r'您的邮箱'  PASSWORD = r'您的密码'》中的汉字部分
 __author__ = 'http://www.pythoner.com/65.html'
 
 
