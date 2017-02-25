@@ -1,5 +1,6 @@
 ﻿## renren-bak
 人人网资料备份python脚本 write by rublog
+===================
 
 通过运行本脚本来保存人人网上的说说、博客文章、相册照片
 
@@ -19,6 +20,16 @@
 ![保存界面](https://github.com/xinyu3ru/renren-bak/blob/master/pic/021316_1319_201602137.png "保存界面")
 
 [可以到我的博客上看更多一点图片](http://www.rxx0.com/motion/ren-ren-wang-bei-fen-2016-02-13-python-3-5.html)<br>
+
+
+
+2017.02.17 
+update by [NewFuture](https://github.com/NewFuture)
+bug fix 
+>cls 清屏(linux clear)
+>密码明文
+>解码方式太原始粗暴了 😂 (导致解析BUG)
+>blog的失效图片链接网络异常，会直接崩溃
 
 2016.03.08 增加保存单个朋友资料功能，并把备份的文件放置于“人人网xxx资料备份xxxx-xx-xx”文件夹下面
            更新因为突然想保存某个朋友的相片
