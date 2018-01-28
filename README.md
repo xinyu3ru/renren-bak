@@ -33,3 +33,11 @@ bug fix
 
 2016.03.08 增加保存单个朋友资料功能，并把备份的文件放置于“人人网xxx资料备份xxxx-xx-xx”文件夹下面
            更新因为突然想保存某个朋友的相片
+           
+           
+2018.01.28 脚本已经失效，研究了一个小时，没有太大进展，不想再更新
+           人人网仍然没有使用ssl加密，不过改登录模式为ajax方式登录，登录页面改为http://www.renren.com/ajaxLogin/login?1=1&uniqueTimestamp=2018001123570
+           timestamp组成为  
+           'try{var s=new Date;e=e+"&uniqueTimestamp="+s.getFullYear()+s.getMonth()+s.getDay()+s.getHours()+s.getSeconds()+s.getUTCMilliseconds()'
+           
+           登录成功不返回response 或者隐藏response，response的url也为空，原来通过返回的url判断成功失败的方法失效
