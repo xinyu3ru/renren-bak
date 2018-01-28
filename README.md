@@ -1,5 +1,5 @@
 ﻿## renren-bak
-人人网资料备份python脚本 write by rublog
+人人网资料备份python脚本 write by rublog 2018.01.28已失效
 ===================
 
 通过运行本脚本来保存人人网上的说说、博客文章、相册照片
@@ -36,8 +36,14 @@ bug fix
            
            
 2018.01.28 脚本已经失效，研究了一个小时，没有太大进展，不想再更新
+
+
            人人网仍然没有使用ssl加密，不过改登录模式为ajax方式登录，登录页面改为http://www.renren.com/ajaxLogin/login?1=1&uniqueTimestamp=2018001123570
-           timestamp组成为  
+
+
+timestamp组成为  
            'try{var s=new Date;e=e+"&uniqueTimestamp="+s.getFullYear()+s.getMonth()+s.getDay()+s.getHours()+s.getSeconds()+s.getUTCMilliseconds()'
-           
+
+
+
            登录成功不返回response 或者隐藏response，response的url也为空，原来通过返回的url判断成功失败的方法失效
