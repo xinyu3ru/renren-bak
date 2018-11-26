@@ -149,8 +149,8 @@ class Renren(object):
         user_name = re.findall(
             'avatar_title\sno_auth">([\s\S]*?)<span>', shouye)
         if user_name:
-            self.user_name = user_name[0]
-            return user_name[0]
+            self.user_name = user_name[0].strip()
+            return user_name[0].strip()
         return 1000
 
     # 获取个人的人人id
@@ -689,7 +689,10 @@ class Renren(object):
         # print(photo_sourse_decode)
         photo_info = json.loads(photo_sourse_decode)
         currentPhoto = photo_info.get('currentPhoto')
-        return currentPhoto.get('originTitle') or '本图没有标题'
+        if currentPhoto is not None:
+            return currentPhoto.get('originTitle') or '本图没有标题'
+        else:
+            return '本图没有标题'
 
     # 保存相册并组合成html源码格式
     def save_album(self, album_id, album_name):
