@@ -1,5 +1,5 @@
 ﻿## renren-bak
-人人网资料备份python脚本 write by rublog 2018.01.28已失效
+人人网资料备份python脚本 write by rublog 2018.12.07复活
 ===================
 
 通过运行本脚本来保存人人网上的说说、博客文章、相册照片
