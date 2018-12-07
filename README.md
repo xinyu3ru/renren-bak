@@ -47,3 +47,11 @@ timestamp组成为
 
 
            登录成功不返回response 或者隐藏response，response的url也为空，原来通过返回的url判断成功失败的方法失效
+         
+         
+         
+2018.12.07 
+Update by [bitdust](https://github.com/bitdust)
+           1. 修复抓取用户名中多余空格
+           2. 图片无标题带来的程序崩溃
+           PS：根据我的测试，没有遇到您 readme 中提到的 ajax 登录问题。似乎是人人网又把登录方式改回来了。这个 renren-bak 项目又可以正常使用了。
